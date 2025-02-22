@@ -1,10 +1,14 @@
-import { NextFunction, Request, Response } from "express";
+import {  Request, Response } from "express";
 import { generateToken } from "../config/jwt";
 
 const HARD_CODED_USER = {
   username: "naval.ravikant",
   password: "05111974",
 };
+
+interface AuthRequest extends Request {
+  user?: { username: string };
+}
 
 export const loginUser = (req: Request, res: Response) :void => {
   const { username, password } = req.body;
@@ -28,7 +32,7 @@ export const loginUser = (req: Request, res: Response) :void => {
   res.status(200).json({ JWT: token });
 };
 
-export const testProtectedRoute = (req: Request, res: Response) => {
-   res.status(200).json({ message: `Hello, ${req.body.username}! You are authorized.` });
-   return;
+export const testProtectedRoute = (req: AuthRequest, res: Response) => {
+  res.status(200).json({ message: `Hello, ${req.user?.username}! You are authorized.` });
+  return;
 };

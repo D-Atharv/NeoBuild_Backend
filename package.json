@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "devStart": "ts-node src/server.ts"
+    "devStart": "nodemon src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,8 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.1",
-    "mongoose": "^8.10.1"
+    "mongoose": "^8.10.1",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
@@ -26,6 +27,7 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.4",
+    "@types/pdf-parse": "^1.1.4",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"

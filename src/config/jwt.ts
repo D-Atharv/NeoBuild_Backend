@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { JWT_SECRET, JWT_EXPIRY } from "./dotenv";
+import { JWT_SECRET} from "./dotenv";
 
 export const generateToken = (username: string): string => {
-  return jwt.sign({ username }, JWT_SECRET, { expiresIn:  parseInt(JWT_EXPIRY) });
+  return jwt.sign({ username }, JWT_SECRET, { expiresIn:  "1hr" });
 };

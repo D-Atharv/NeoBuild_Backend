@@ -4,14 +4,19 @@ import bodyParser from "body-parser";
 import { connectDB } from "./config/db";
 import { PORT } from "./config/dotenv";
 import auth from "./routes/auth_routes"
+import resume from "./routes/resume_routes"
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/auth", auth);
+app
+.use("/api/auth", auth)
+.use("/api/resume", resume);
 
 
 app.listen(PORT, async() => {
