@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import pdf from "pdf-parse";
-import { generateStructuredData } from "../services/llm_service";
+import { extractTextFromPDF } from "../services/pdf_service";
+import { processResumeData } from "../services/structured_data_service";
 import Applicant from "../models/applicant";
 
 export const extractResumeData = async (req: Request, res: Response): Promise<void> => {
@@ -11,54 +11,41 @@ export const extractResumeData = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      const errorBody = await response.json();
-      res.status(400).json({ error: errorBody.error || "Unable to fetch PDF from URL" });
-      return;
-    }
+    const resumeText = await extractTextFromPDF(url);
+    const applicantData = await processResumeData(resumeText);
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/pdf")) {
-      res.status(400).json({ error: "Invalid file type. Only PDFs are supported" });
-      return;
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const pdfBuffer = Buffer.from(arrayBuffer);
-
-    const pdfData = await pdf(pdfBuffer);
-    if (!pdfData.text || pdfData.text.trim() === "") {
-      res.status(500).json({ error: "No text found in PDF" });
-      return;
-    }
-
-    const structuredDataString = await generateStructuredData(pdfData.text);
-    if (!structuredDataString) {
-      res.status(500).json({ error: "Failed to generate structured data from resume" });
-      return;
-    }
-
-    let structuredData;
-    try {
-      structuredData = JSON.parse(structuredDataString);
-      if (Array.isArray(structuredData.education)) {
-        structuredData.education = structuredData.education[0];
-      }
-      if (Array.isArray(structuredData.experience)) {
-        structuredData.experience = structuredData.experience[0];
-      }
-    } catch (err) {
-      res.status(500).json({ error: "Structured data is not valid JSON" });
-      return;
-    }
-
-    const applicant = new Applicant(structuredData);
+    const applicant = new Applicant(applicantData);
     await applicant.save();
 
     res.status(200).json({ message: "Resume processed successfully", applicant });
+
+  } catch (error: any) {
+    console.error("Error:", error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
+  }
+};
+
+
+
+export const searchResume = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      res.status(400).json({ error: "Missing name in request body" });
+      return;
+    }
+
+    const regex = new RegExp(username, "i");
+    const applicants = await Applicant.find({ name: { $regex: regex } });
+
+    if (!applicants || applicants.length === 0) {
+      res.status(404).json({ error: "No matching resume found" });
+      return;
+    }
+
+    res.status(200).json({ data: applicants });
   } catch (error) {
-    console.error("Error processing resume:", error);
+    console.error("Error searching resumes:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
